@@ -1,3 +1,7 @@
+# ignored due to file size
+AllInfo/*
+CompiledInfo.txt
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
