@@ -4,6 +4,11 @@ CompiledInfo.txt
 CompiledInfo.zip
 AllCANONInfo/*
 CompiledCANONInfo.txt
+CompiledALLInfo.txt
+vectDB/*
+vectDBALLINFO/*
+vectDBs.zip
+models/*
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
