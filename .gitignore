@@ -9,6 +9,7 @@ vectDB/*
 vectDBALLINFO/*
 vectDBs.zip
 models/*
+vectDBALLINFOHuggingFace/*
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
