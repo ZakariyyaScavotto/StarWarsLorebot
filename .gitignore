@@ -10,6 +10,8 @@ vectDBALLINFO/*
 vectDBs.zip
 models/*
 vectDBALLINFOHuggingFace/*
+FAISSvectorstore/*
+FAISSvectorstore.7z
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
