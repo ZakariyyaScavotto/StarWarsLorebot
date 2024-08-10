@@ -3,12 +3,13 @@ import transformers
 import dotenv, os
 import torch
 from transformers import StoppingCriteria, StoppingCriteriaList
-from langchain_community.llms import HuggingFacePipeline
+from langchain_huggingface import HuggingFacePipeline
 from langchain_community.document_loaders import UnstructuredFileLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain.chains import ConversationalRetrievalChain
+import re
 
 class swLlamaBot:
     def __init__(self, model_id = 'meta-llama/Llama-2-13b-chat-hf', dataPath = "CompiledALLInfo.txt", vecStorePath = None, loadVecStore = False):
@@ -50,9 +51,28 @@ class swLlamaBot:
         # Initialize chat history
         self.chat_history = []
         print("Ready to chat!")
-    
+
     def chat(self, user_input):
-        reply = self.chain({"question": user_input, "chat_history": self.chat_history})['answer']
+        reply = self.chain.invoke({"question": user_input, "chat_history": self.chat_history})['answer']
+        # Find all occurrences of 'Helpful Answer:' and the text that follows
+        matches = re.findall(r'Helpful Answer:\s*(.*?)(?=\nHelpful Answer:|$)', reply, re.DOTALL)
+        # Select the last match
+        if matches:
+            reply = matches[-1]  
+        # Loop to handle multiple possible standalone questions
+        while True:
+            # Check if the reply is a standalone question
+            standalone_question_match = re.match(r"Sure thing! Here's (?:your standalone question|the rephrased version of your follow-up question|the rephrased version of the follow-up question):\s*(.*)", reply)
+            if standalone_question_match or reply.strip().endswith('?'):
+                # print("STANDALONE QUESTION DETECTED")
+                standalone_question = standalone_question_match.group(1) if standalone_question_match else reply.strip()
+                # Invoke the chain again with the standalone question
+                reply = self.chain.invoke({"question": standalone_question, "chat_history": []})['answer']
+                matches = re.findall(r'Helpful Answer:\s*(.*?)(?=\nHelpful Answer:|$)', reply, re.DOTALL)
+                if matches:
+                    reply = matches[-1] 
+            else:
+                break
         self.chat_history.append((user_input, reply))
         print(reply)
         return reply
@@ -71,25 +91,21 @@ class swLlamaBot:
             bnb_4bit_use_double_quant=True,
             bnb_4bit_compute_dtype=bfloat16
         )
-
         # begin initializing HF items, you need an access token
         model_config = transformers.AutoConfig.from_pretrained(
             self.model_id,
-            use_auth_token=self.hf_auth
+            token=self.hf_auth
         )
-
         model = transformers.AutoModelForCausalLM.from_pretrained(
             self.model_id,
             trust_remote_code=True,
             config=model_config,
             quantization_config=bnb_config,
             device_map='auto',
-            use_auth_token=self.hf_auth
+            token=self.hf_auth
         )
-
         # enable evaluation mode to allow model inference
         model.eval()
-
         print(f"Model loaded on {self.device}")
         return model
     
