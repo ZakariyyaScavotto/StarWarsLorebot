@@ -3,22 +3,22 @@ import transformers
 import dotenv, os
 import torch
 from transformers import StoppingCriteria, StoppingCriteriaList
-from langchain.llms import HuggingFacePipeline
+from langchain_community.llms import HuggingFacePipeline
 from langchain_community.document_loaders import UnstructuredFileLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.vectorstores import FAISS
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.vectorstores import FAISS
 from langchain.chains import ConversationalRetrievalChain
 
 class swLlamaBot:
-    def __init__(self, model_id = 'meta-llama/Llama-2-7b-chat-hf', dataPath = "CompiledALLInfo.txt", vecStorePath = None, loadVecStore = False):
+    def __init__(self, model_id = 'meta-llama/Llama-2-13b-chat-hf', dataPath = "CompiledALLInfo.txt", vecStorePath = None, loadVecStore = False):
         # Load environment variables
         dotenv.load_dotenv()
         self.hf_auth = os.getenv('HF_AUTH_TOKEN')
         self.device = f'cuda:{cuda.current_device()}' if cuda.is_available() else 'cpu'
         self.model_id = model_id
         # Initialize tokenizer
-        self.tokenizer = transformers.AutoTokenizer.from_pretrained(self.model_id, use_auth_token=self.hf_auth)
+        self.tokenizer = transformers.AutoTokenizer.from_pretrained(self.model_id, token=self.hf_auth)
         # Define stop_token_ids
         self.stop_list = ['\nHuman:', '\n```\n']
         # Initialize pipeline
@@ -39,7 +39,7 @@ class swLlamaBot:
         model_kwargs = {"device": "cuda"}
         self.embeddings = HuggingFaceEmbeddings(model_name=model_name, model_kwargs=model_kwargs)
         if loadVecStore and vecStorePath is not None:
-            self.vecStore = FAISS.load_local(vecStorePath, self.embeddings)
+            self.vecStore = FAISS.load_local(vecStorePath, self.embeddings, allow_dangerous_deserialization=True)
         elif loadVecStore and vecStorePath is None:
             raise ValueError("vecStorePath must be provided if loadVecStore is True")
         else:
