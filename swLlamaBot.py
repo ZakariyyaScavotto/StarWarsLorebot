@@ -91,6 +91,10 @@ class swLlamaBot:
 
     @lru_cache(maxsize=1)
     def load_model(self, model_id, hf_auth):
+        """
+        Loads the model with the given ID and authentication token. 
+        This method is cached using lru_cache to ensure the model is loaded only once, avoiding redundant loading operations.
+        """
         # set quantization configuration to load large model with less GPU memory
         bnb_config = transformers.BitsAndBytesConfig(
             load_in_4bit=True,
