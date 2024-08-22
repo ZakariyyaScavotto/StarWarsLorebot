@@ -2,6 +2,8 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from swLlamaBot import swLlamaBot
 import time
+from fastapi.responses import RedirectResponse
+
 app = FastAPI()
 
 # Initialize the bot when the API starts
@@ -43,3 +45,8 @@ async def reset_chat_endpoint():
         return {"message": message}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/docs-link")
+async def docs_link():
+    # Redirect to the FastAPI docs
+    return RedirectResponse(url="/docs")
