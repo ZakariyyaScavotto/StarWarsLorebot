@@ -1,0 +1,15 @@
+{
+	"version": 2,
+	"builds": [
+		{
+			"src": "swBotAPI.py",
+			"use": "@vercel/python"
+		}
+	],
+	"routes": [
+		{
+			"src": "/(.*)",
+			"dest": "swBotAPI.py"
+		}
+	]
+}
