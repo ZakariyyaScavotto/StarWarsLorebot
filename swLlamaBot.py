@@ -16,7 +16,7 @@ import numpy as np
 from langchain.docstore import InMemoryDocstore
 from langchain.vectorstores.faiss import FAISS as LangchainFAISS
 class swLlamaBot:
-    def __init__(self, model_id = 'meta-llama/Llama-2-13b-chat-hf', dataPath = "CompiledALLInfo.txt", vecStorePath = None, loadVecStore = False):
+    def __init__(self, model_id = 'meta-llama/Llama-2-13b-chat-hf', dataPath = "Data/CompiledALLInfo.txt", vecStorePath = None, loadVecStore = False):
         # Load environment variables
         dotenv.load_dotenv()
         self.hf_auth = os.getenv('HF_AUTH_TOKEN')
