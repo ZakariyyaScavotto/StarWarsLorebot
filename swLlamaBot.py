@@ -127,6 +127,7 @@ class swLlamaBot:
     
     def createVecStore(self, dataPath, vecStorePath="FAISSvectorstore", batch_size=1000):
         loader = UnstructuredLoader(dataPath)
+        print("Loading data...")
         documents = loader.load()
         print("Data loaded")
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=20)
@@ -136,11 +137,18 @@ class swLlamaBot:
         initial_batch = all_splits[:batch_size]
         initial_batch_texts = [doc.page_content for doc in initial_batch]
         initial_batch_embeddings = self.embeddings.embed_documents(initial_batch_texts)
-        # Initialize FAISS index (e.g., IVFFlat)
+        # Create IVFPQ index
         d = len(initial_batch_embeddings[0])  # Dimension of embeddings
         nlist = 100  # Number of clusters (adjust as needed)
+        m = 8  # Number of subquantizers (adjust as needed)
+        nbits = 8  # Number of bits per code in each subquantizer (usually 8)
         quantizer = faiss.IndexFlatL2(d)  # Flat index used for clustering
-        index = faiss.IndexIVFFlat(quantizer, d, nlist, faiss.METRIC_L2)
+        index = faiss.IndexIVFPQ(quantizer, d, nlist, m, nbits)
+        # Initialize FAISS index (e.g., IVFFlat)
+        # d = len(initial_batch_embeddings[0])  # Dimension of embeddings
+        # nlist = 100  # Number of clusters (adjust as needed)
+        # quantizer = faiss.IndexFlatL2(d)  # Flat index used for clustering
+        # index = faiss.IndexIVFFlat(quantizer, d, nlist, faiss.METRIC_L2)
         # Train the index with initial batch embeddings
         index.train(np.array(initial_batch_embeddings))
         print("FAISS index trained")

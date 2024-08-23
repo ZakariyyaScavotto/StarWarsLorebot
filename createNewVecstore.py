@@ -1,0 +1,26 @@
+from swLlamaBot import swLlamaBot
+import time
+bot = swLlamaBot(loadVecStore=False, vecStorePath="FAISSvectorstoreIVFPQ_6")
+# bot = swLlamaBot(loadVecStore=True, vecStorePath="FAISSvectorstore") # original bot
+# Test the bot with the new vector store by chatting with it
+startTime = time.time()
+bot.chat("Who is Darth Vader?")
+print(f"Time taken to answer: {time.time() - startTime} seconds")
+startTime = time.time()
+bot.chat("How did he turn to the dark side?")
+print(f"Time taken to answer: {time.time() - startTime} seconds")
+startTime = time.time()
+bot.chat("Who is Luke Skywalker?")
+print(f"Time taken to answer: {time.time() - startTime} seconds")
+startTime = time.time()
+bot.chat("How did he come to be a Jedi?")
+print(f"Time taken to answer: {time.time() - startTime} seconds")
+startTime = time.time()
+bot.chat("I thought Luke was a Sith Lord?")
+print(f"Time taken to answer: {time.time() - startTime} seconds")
+startTime = time.time()
+bot.chat("So how did he defeat Darth Vader?")
+print(f"Time taken to answer: {time.time() - startTime} seconds")
+startTime = time.time()
+bot.chat("What is the Force?")
+print(f"Time taken to answer: {time.time() - startTime} seconds")
