@@ -14,6 +14,7 @@ FAISSvectorstore/*
 FAISSvectorstore.7z
 FAISSvectorStoreIVFFlat/*
 oldVecStores/*
+OldVectorStores/*
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
