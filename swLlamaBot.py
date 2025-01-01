@@ -15,73 +15,98 @@ import faiss
 import numpy as np
 from langchain_community.docstore import InMemoryDocstore
 from langchain_community.vectorstores.faiss import FAISS as LangchainFAISS
+import logging
+
 class swLlamaBot:
-    def __init__(self, model_id = 'meta-llama/Llama-2-13b-hf', dataPath = "Data/CompiledALLInfo.txt", vecStorePath = None, loadVecStore = False):
+    def __init__(self, model_id='meta-llama/Llama-2-13b-chat-hf', dataPath="Data/CompiledALLInfo.txt", vecStorePath=None, loadVecStore=False):
+        # Setup logging
+        self.logger = logging.getLogger(__name__)
+        logging.basicConfig(level=logging.INFO)
         # Load environment variables
         dotenv.load_dotenv()
         self.hf_auth = os.getenv('HF_AUTH_TOKEN')
         self.device = f'cuda:{cuda.current_device()}' if cuda.is_available() else 'cpu'
         self.model_id = model_id
+
         # Initialize tokenizer
         self.tokenizer = transformers.AutoTokenizer.from_pretrained(self.model_id, token=self.hf_auth)
-        # Define stop_token_ids
+
+        # Define stopping criteria
         self.stop_list = ['\nHuman:', '\n```\n']
+
         # Initialize pipeline
         self.gen_text = transformers.pipeline(
             model=self.init_model(),
             tokenizer=self.tokenizer,
-            return_full_text=True,  # langchain expects the full text
+            return_full_text=True,
             task='text-generation',
-            # we pass model parameters here too
-            stopping_criteria=self.init_stop_criteria(),  # without this model rambles during chat
-            temperature=0.1,  # 'randomness' of outputs, 0.0 is the min and 1.0 the max
-            max_new_tokens=512,  # max number of tokens to generate in the output
-            repetition_penalty=1.1  # without this output begins repeating
+            stopping_criteria=self.init_stop_criteria(),
+            temperature=0.7,
+            max_new_tokens=512,
+            repetition_penalty=1.15
         )
-        print("Pipeline initialized")
+        self.logger.info("Pipeline initialized.")
+
         # Initialize Vecstore and embeddings
         model_name = "sentence-transformers/all-mpnet-base-v2"
         model_kwargs = {"device": "cuda"}
         self.embeddings = HuggingFaceEmbeddings(model_name=model_name, model_kwargs=model_kwargs)
-        if loadVecStore and vecStorePath is not None:
+
+        if loadVecStore and vecStorePath:
             self.vecStore = FAISS.load_local(vecStorePath, self.embeddings, allow_dangerous_deserialization=True)
-        elif loadVecStore and vecStorePath is None:
-            raise ValueError("vecStorePath must be provided if loadVecStore is True")
-        else:
+            self.validate_vec_store()
+        elif not loadVecStore:
             self.vecStore = self.createVecStore(dataPath, vecStorePath)
-        print("VecStore initialized")
+        else:
+            raise ValueError("vecStorePath must be provided if loadVecStore is True")
+
+        self.logger.info("VecStore initialized.")
+
         # Initialize ConversationalRetrievalChain
-        self.chain = ConversationalRetrievalChain.from_llm(HuggingFacePipeline(pipeline=self.gen_text), self.vecStore.as_retriever(), return_source_documents=True)
-        # Initialize chat history
+        self.chain = ConversationalRetrievalChain.from_llm(
+            HuggingFacePipeline(pipeline=self.gen_text),
+            self.vecStore.as_retriever(search_kwargs={'score_threshold': 0.8}),
+            return_source_documents=True
+        )
+
         self.chat_history = []
         self.helpful_answer_pattern = re.compile(r'Helpful Answer:\s*(.*?)(?=\nHelpful Answer:|$)', re.DOTALL)
-        self.standalone_question_pattern = re.compile(r"Sure thing! Here's (?:your standalone question|the rephrased version of your follow-up question|the rephrased version of the follow-up question):\s*(.*)")
-        print("Ready to chat!")
+        self.standalone_question_pattern = re.compile(r"Sure thing! Here's (?:your standalone question|the rephrased version of your follow-up question):\s*(.*)")
+        self.logger.info("Bot ready to chat!")
+
 
     def chat(self, user_input):
+        self.logger.info(f"User input: {user_input}")
+        
+        # Retrieve documents for debugging
+        retrieved_docs = self.chain.retriever.get_relevant_documents(user_input)
+        self.logger.info(f"Retrieved documents: {[doc.page_content for doc in retrieved_docs]}")
+        
+        # Generate the reply
         reply = self.chain.invoke({"question": user_input, "chat_history": self.chat_history})['answer']
-        # Find all occurrences of 'Helpful Answer:' and the text that follows
+        self.logger.info(f"Model raw output: {reply}")
+        
+        # Find and process 'Helpful Answer'
         matches = self.helpful_answer_pattern.findall(reply)
-        # Select the last match
         if matches:
-            reply = matches[-1]  
-        # Loop to handle multiple possible standalone questions
-        while True:
-            # Check if the reply is a standalone question
+            reply = matches[-1]
+        
+        # Handle standalone questions (max of 5 attempts)
+        for i in range(5):
             standalone_question_match = self.standalone_question_pattern.match(reply)
             if standalone_question_match or reply.strip().endswith('?'):
-                # print("STANDALONE QUESTION DETECTED")
+                self.logger.info("STANDALONE QUESTION DETECTED")
                 standalone_question = standalone_question_match.group(1) if standalone_question_match else reply.strip()
-                # Invoke the chain again with the standalone question
                 reply = self.chain.invoke({"question": standalone_question, "chat_history": []})['answer']
-                matches = re.findall(r'Helpful Answer:\s*(.*?)(?=\nHelpful Answer:|$)', reply, re.DOTALL)
+                matches = self.helpful_answer_pattern.findall(reply)
                 if matches:
-                    reply = matches[-1] 
+                    reply = matches[-1]
             else:
                 break
+        
         self.chat_history.append((user_input, reply))
         self.chat_history = self.chat_history[-5:]
-        print(reply)
+        self.logger.info(f"Final reply: {reply}")
         return reply
 
     def reset_chat(self):
@@ -125,6 +150,13 @@ class swLlamaBot:
         stopping_criteria = StoppingCriteriaList([StopOnTokens(stop_token_ids)])
         return stopping_criteria
     
+    def validate_vec_store(self):
+        if not self.vecStore or not self.vecStore.index:
+            self.logger.error("Vector store is not initialized properly!")
+            raise ValueError("Vector store is not initialized properly!")
+        num_vectors = self.get_num_vectors()
+        self.logger.info(f"Vector store initialized with {num_vectors} vectors.")
+
     def createVecStore(self, dataPath, vecStorePath="FAISSvectorstore", batch_size=1000):
         loader = UnstructuredLoader(dataPath)
         print("Loading data...")

@@ -5,7 +5,7 @@
 # Except these files and directories
 
 !swLlamaBot.py
-!FAISSvectorstore/
+!FAISSvectorstoreIVFPQ/
 !.env
 !swBotAPI_Runpod.py
 !swLorebotLinux.yml
@@ -13,4 +13,4 @@
 
 # Include everything inside these directories
 
-!FAISSvectorstore/**
+!FAISSvectorstoreIVFPQ/**

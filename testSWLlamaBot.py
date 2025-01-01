@@ -21,8 +21,10 @@ def chatAndTime(bot, question, chatTimes):
 
 def main():
     allChatTimesDF = pd.DataFrame()
-    # bot = swLlamaBot(vecStorePath="FAISSvectorstore", loadVecStore=True)
-    bot = swLlamaBot(vecStorePath="FAISSvectorStoreIVFPQ", loadVecStore=True) # DO NOT USE IVFFLAT WE DONT HAVE THE RAM FOR IT
+    bot = swLlamaBot(vecStorePath="FAISSvectorstoreIVFPQ", loadVecStore=True) 
+    # bot = swLlamaBot(vecStorePath="FAISSvectorStoreIVFPQ", loadVecStore=True) # DO NOT USE IVFFLAT WE DONT HAVE THE RAM FOR IT
+    bot.chat("Who is luke skywalker?")
+    return
     for i in range(10):
         chatTimes = []
         chatAndTime(bot, "Who is Darth Vader?", chatTimes)

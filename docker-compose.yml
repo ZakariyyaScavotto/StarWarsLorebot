@@ -1,33 +1,3 @@
-# services:
-#   swbotapi:
-#     build: .
-#     ports:
-#       - "8000:8000"
-#     volumes:
-#       - .:/app
-#     environment:
-#       - PATH=/opt/conda/envs/swLorebot/bin:$PATH
-#     entrypoint: ["python", "swBotAPI_Runpod.py"]
-
-# services:
-#   swbotapi:
-#     build: .
-#     ports:
-#       - "8000:8000"
-#     volumes:
-#       - .:/app
-#     environment:
-#       - PATH=/opt/conda/envs/swLorebot/bin:$PATH
-#     deploy:
-#       resources:
-#         reservations:
-#           devices:
-#             - driver: nvidia
-#               count: all
-#               capabilities: [gpu]
-#     runtime: nvidia
-#     entrypoint: ["python", "swBotAPI_Runpod.py"]
-
 services:
   swbotapi:
     build:
@@ -44,7 +14,7 @@ services:
           devices:
             - driver: nvidia
               count: all
-              capabilities: [compute, utility]
+              capabilities: [compute, utility, gpu]
     runtime: nvidia
     entrypoint:
       [
@@ -52,9 +22,3 @@ services:
         "-c",
         "/opt/conda/bin/activate swLorebot && python swBotAPI_Runpod.py"
       ]
-
-      # [
-      #   "bash",
-      #   "-c",
-      #   "source /opt/conda/bin/activate swLorebot && python swBotAPI_Runpod.py"
-      # ]

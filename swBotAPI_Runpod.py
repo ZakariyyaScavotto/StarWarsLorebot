@@ -8,11 +8,12 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Initialize the bot
-bot = swLlamaBot(loadVecStore=True, vecStorePath="FAISSvectorstore")
+bot = swLlamaBot(loadVecStore=True, vecStorePath="FAISSvectorstoreIVFPQ")
 
 def handler(event):
+    logger.info(f"Received event: {event}")
     try:
-        operation = event.get("operation")
+        operation = event.get("operation") or event.get("input", {}).get("operation")
         if not operation:
             return {"error": "Missing 'operation' in the request"}
         
