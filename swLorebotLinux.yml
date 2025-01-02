@@ -178,7 +178,7 @@ dependencies:
       - regex==2024.11.6
       - requests-toolbelt==1.0.0
       - rich==13.9.4
-      - runpod==1.7.4
+      - runpod==1.7.7
       - s3transfer==0.10.3
       - safetensors==0.4.5
       - scikit-learn==1.5.2
