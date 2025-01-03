@@ -6,6 +6,7 @@ services:
       - "8000:8000"
     volumes:
       - .:/app
+      - /runpod-volume/:/runpod-volume/ # Mount the RunPod network volume
     environment:
       - PATH=/opt/conda/envs/swLorebot/bin:$PATH
     deploy:

@@ -4,7 +4,7 @@
 
 # Except these files and directories
 
-!swLlamaBot.py
+!swLlamaBotRunpod.py
 !FAISSvectorstoreIVFPQ/
 !.env
 !swBotAPI_Runpod.py

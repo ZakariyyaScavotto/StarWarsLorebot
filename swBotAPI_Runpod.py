@@ -1,5 +1,5 @@
 import runpod
-from swLlamaBot import swLlamaBot
+from swLlamaBotRunpod import swLlamaBot
 import logging
 import traceback
 
