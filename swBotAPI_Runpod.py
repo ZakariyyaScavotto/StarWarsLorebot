@@ -40,12 +40,17 @@ def ready_handler():
 
 def chat_handler(input_data):
     user_input = input_data.get("user_input")
+    chat_history = input_data.get("chat_history", [])
     if not user_input:
         return {"error": "Missing 'user_input'"}
+    
+    # Convert chat history to the expected format
+    formatted_chat_history = [(entry['sender'], entry['text']) for entry in chat_history]
+    
     try:
         # Process chat request
-        reply = bot.chat(user_input)
-        return {"reply": reply}
+        reply = bot.chat(user_input, formatted_chat_history)
+        return {"reply": reply, "chat_history": chat_history}
     except Exception as e:
         logger.error(f"Error during chat operation: {str(e)}\n{traceback.format_exc()}")
         return {"error": "Chat operation failed"}

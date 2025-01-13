@@ -75,15 +75,18 @@ class swLlamaBot:
         self.logger.info("Bot ready to chat!")
 
 
-    def chat(self, user_input):
+    def chat(self, user_input, chat_history=None):
         self.logger.info(f"User input: {user_input}")
+        
+        if chat_history is None:
+            chat_history = self.chat_history
         
         # Retrieve documents for debugging
         retrieved_docs = self.chain.retriever.get_relevant_documents(user_input)
         self.logger.info(f"Retrieved documents: {[doc.page_content for doc in retrieved_docs]}")
         
         # Generate the reply
-        reply = self.chain.invoke({"question": user_input, "chat_history": self.chat_history})['answer']
+        reply = self.chain.invoke({"question": user_input, "chat_history": chat_history})['answer']
         self.logger.info(f"Model raw output: {reply}")
         
         # Find and process 'Helpful Answer'
@@ -104,8 +107,8 @@ class swLlamaBot:
             else:
                 break
         
-        self.chat_history.append((user_input, reply))
-        self.chat_history = self.chat_history[-5:]
+        chat_history.append((user_input, reply))
+        self.chat_history = chat_history[-5:]
         self.logger.info(f"Final reply: {reply}")
         return reply
 
